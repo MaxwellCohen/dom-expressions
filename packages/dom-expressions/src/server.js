@@ -18,7 +18,7 @@ export {
 // Based on https://github.com/WebReflection/domtagger/blob/master/esm/sanitizer.js
 const VOID_ELEMENTS =
   /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
-const REPLACE_SCRIPT = `function $df(e,n,o,t){if(n=document.getElementById(e),o=document.getElementById("pl-"+e)){for(;o&&8!==o.nodeType&&o.nodeValue!=="pl-"+e;)t=o.nextSibling,o.remove(),o=t;_$HY.done?o.remove():o.replaceWith(n.content)}n.remove(),_$HY.fe(e)}`;
+const REPLACE_SCRIPT = `function $df(e,n,o,t,s,d){d=document;if(n=d.querySelector('template[for="'+e+'"]'))if(o=d.createTreeWalker(d,128,n=>n.nodeValue=='?start name="'+e+'"'?1:3).nextNode()){for(t='/'+e;o&&o.nodeValue!=t;s=o.nextSibling,o.remove(),o=s);_$HY.done?o.remove():o.replaceWith(n.content)}n&&n.remove(),_$HY.fe(e)}`;
 
 export function renderToString(code, options = {}) {
   const { renderId } = options;
@@ -207,7 +207,7 @@ export function renderToStream(code, options = {}) {
               queue(() => (html = replacePlaceholder(html, key, value !== undefined ? value : "")));
               resolve(error);
             } else {
-              buffer.write(`<template id="${key}">${value !== undefined ? value : " "}</template>`);
+              buffer.write(`<template for="${key}">${value !== undefined ? value : " "}</template>`);
               pushTask(`$df("${key}")${!scriptFlushed ? ";" + REPLACE_SCRIPT : ""}`);
               resolve(error);
               scriptFlushed = true;
@@ -609,8 +609,8 @@ function waitForFragments(registry, key) {
 }
 
 function replacePlaceholder(html, key, value) {
-  const marker = `<template id="pl-${key}">`;
-  const close = `<!--pl-${key}-->`;
+  const marker = `<?start name="${key}">`;
+  const close = `<!--/${key}-->`;
 
   const first = html.indexOf(marker);
   if (first === -1) return html;
@@ -719,6 +719,8 @@ export function ssrSpread(props, isSVG, skipChildren) {
 }
 
 // client-only APIs
+
+export { replacePlaceholder, REPLACE_SCRIPT };
 
 export {
   notSup as classList,
