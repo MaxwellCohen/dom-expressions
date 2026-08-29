@@ -18,7 +18,7 @@ export {
 // Based on https://github.com/WebReflection/domtagger/blob/master/esm/sanitizer.js
 const VOID_ELEMENTS =
   /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
-const REPLACE_SCRIPT = `function $df(e,n,o,t,s,d){d=document;if(n=d.querySelector('template[for="'+e+'"]'))if(o=d.createTreeWalker(d,128,n=>n.nodeValue=='?start name="'+e+'"'?1:3).nextNode()){for(t="pl-"+e;o&&(8!==o.nodeType||o.nodeValue!==t);)s=o.nextSibling,o.remove(),o=s;_$HY.done?o.remove():o.replaceWith(n.content)}n&&n.remove(),_$HY.fe(e)}`;
+const REPLACE_SCRIPT = `function $pi(){var t,n,o,d=document;if(!d.body)return;for(var l=d.createTreeWalker(d.body,128),i=[];t=l.nextNode();)i.push(t);for(var r=0;t=i[r++];)if(n=t.nodeValue)if(n.indexOf("?start name=")===0)o=n.slice(13,n.indexOf('"',13)),t.replaceWith(Object.assign(d.createElement("template"),{id:"pl-"+o}));else n.indexOf("?end ")===0&&t.replaceWith(d.createComment("pl-"+n.slice(5)))}function $df(e,t,n,o,d){if(t=(d=document).querySelector("template[for='"+e+"']"),n=d.getElementById("pl-"+e)){for(;n&&(8!==n.nodeType||n.nodeValue!=="pl-"+e);)o=n.nextSibling,n.remove(),n=o;n&&(_$HY.done?n.remove():n.replaceWith(t.content))}t&&t.remove(),_$HY.fe(e),$pi()}document.body&&$pi();`;
 
 export function renderToString(code, options = {}) {
   const { renderId } = options;
@@ -610,7 +610,7 @@ function waitForFragments(registry, key) {
 
 function replacePlaceholder(html, key, value) {
   const marker = `<?start name="${key}">`;
-  const close = `<?end><!--pl-${key}-->`;
+  const close = `<?end ${key}>`;
 
   const first = html.indexOf(marker);
   if (first === -1) return html;
