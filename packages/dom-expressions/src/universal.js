@@ -63,7 +63,7 @@ export function createRenderer({
           if (current.length === 0) {
             appendNodes(parent, array, marker);
           } else reconcileArrays(parent, current, array);
-        } else if (current == null || current === "") {
+        } else if (current == null || !getFirstChild(parent)) {
           appendNodes(parent, array);
         } else {
           reconcileArrays(parent, (multi && current) || [getFirstChild(parent)], array);
@@ -74,7 +74,7 @@ export function createRenderer({
       if (Array.isArray(current)) {
         if (multi) return (current = cleanChildren(parent, current, marker, value));
         cleanChildren(parent, current, null, value);
-      } else if (current == null || current === "" || !getFirstChild(parent)) {
+      } else if (current == null || !getFirstChild(parent)) {
         insertNode(parent, value);
       } else replaceNode(parent, value, getFirstChild(parent));
       current = value;
@@ -219,7 +219,14 @@ export function createRenderer({
     }
     effect(() => props.ref && props.ref(node));
     effect(() => {
-      for (const prop in props) {
+      const propNames = new Set();
+      for (const prop in props) propNames.add(prop);
+      for (const prop in prevProps) {
+        if (prop === "children" || prop === "ref" || propNames.has(prop)) continue;
+        setProperty(node, prop, undefined, prevProps[prop]);
+        delete prevProps[prop];
+      }
+      for (const prop of propNames) {
         if (prop === "children" || prop === "ref") continue;
         const value = props[prop];
         if (value === prevProps[prop]) continue;
